@@ -1,0 +1,210 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+// ---------- Utility helpers ----------
+static inline string trim(const string &s){
+    size_t a = s.find_first_not_of("\t\n\r ");
+    if(a==string::npos) return "";
+    size_t b = s.find_last_not_of("\t\n\r ");
+    return s.substr(a, b-a+1);
+}
+
+string toLowerCaseManual(string s){
+    for(char &c : s){
+        if(c >= 'A' && c <= 'Z') c = char(c - 'A' + 'a');
+    }
+    return s;
+}
+
+string removeSpacesAndLower(string s){
+    string t; t.reserve(s.size());
+    for(char c : s){
+        if(c!=' '){
+            t.push_back((char)tolower((unsigned char)c));
+        }
+    }
+    return t;
+}
+
+vector<string> splitWordsLettersOnly(const string &s){
+    vector<string> words; string cur;
+    for(char c : s){
+        if(isalpha((unsigned char)c)) cur.push_back(c);
+        else{ if(!cur.empty()){ words.push_back(cur); cur.clear(); } }
+    }
+    if(!cur.empty()) words.push_back(cur);
+    return words;
+}
+
+// ---------- Part 1: Substring & Search ----------
+void task_extractEmail(){
+    cout << "Enter email: ";
+    string email; getline(cin, email);
+    int pos = (int)email.find('@');
+    if(pos==string::npos || pos==0 || pos==(int)email.size()-1){
+        cout << "[!] Invalid email format.\n";
+        return;
+    }
+    string user = email.substr(0, pos);
+    string domain = email.substr(pos + 1);
+    cout << "Username: " << user << "\n";
+    cout << "Domain: " << domain << "\n";
+}
+
+void task_replaceMiramar(){
+    cout << "Enter text: ";
+    string text; getline(cin, text);
+    const string from = "Miramar";
+    const string to   = "San Diego Miramar College";
+    size_t pos = 0;
+    while((pos = text.find(from, pos)) != string::npos){
+        text.replace(pos, from.size(), to);
+        pos += to.size();
+    }
+    cout << text << "\n";
+}
+
+// ---------- Part 2: String Algorithms ----------
+bool isPalindrome(string s){
+    s = removeSpacesAndLower(s);
+    size_t i=0, j=s.size();
+    if(j==0) return true;
+    j--;
+    while(i<j){
+        if(s[i]!=s[j]) return false;
+        ++i; --j;
+    }
+    return true;
+}
+
+void task_palindrome(){
+    cout << "Enter a phrase: ";
+    string s; getline(cin, s);
+    if(isPalindrome(s)) cout << "It’s a palindrome.\n";
+    else cout << "Not a palindrome.\n";
+}
+
+// ---------- Part 3: Logic Challenges ----------
+void task_longestWord(){
+    cout << "Enter a sentence: ";
+    string s; getline(cin, s);
+    auto words = splitWordsLettersOnly(s);
+    if(words.empty()){ cout << "No words found.\n"; return; }
+    string best = words[0];
+    for(size_t i=1;i<words.size();++i){
+        if(words[i].size() > best.size()) best = words[i];
+    }
+    cout << "Longest word: " << best << "\n";
+    cout << "Length: " << best.size() << "\n";
+}
+
+void task_histogram(){
+    cout << "Enter text: ";
+    string s; getline(cin, s);
+    transform(s.begin(), s.end(), s.begin(), [](unsigned char c){return (char)toupper(c);} );
+    int cnt[26] = {0};
+    for(char c : s){
+        if(c>='A' && c<='Z') cnt[c-'A']++;
+    }
+    for(int i=0;i<26;++i){
+        if(cnt[i]>0){
+            cout << char('A'+i) << " -> " << cnt[i] << "\n";
+        }
+    }
+}
+
+void task_maskEmail(){
+    cout << "Enter email: ";
+    string email; getline(cin, email);
+    size_t at = email.find('@');
+    if(at==string::npos || at==0){ cout << "[!] Invalid email.\n"; return; }
+    string user = email.substr(0, at);
+    string domain = email.substr(at);
+    if(user.size() <= 2){
+        cout << user + domain << "\n";
+        return;
+    }
+    string masked = string(1, user.front());
+    masked.append(user.size()-2, '*');
+    masked.push_back(user.back());
+    cout << masked + domain << "\n";
+}
+
+// ---------- Extra Credit ----------
+void ec_sortWords(){
+    cout << "Enter a sentence: ";
+    string s; getline(cin, s);
+    vector<string> words = splitWordsLettersOnly(s);
+    for(string &w : words){
+        w = toLowerCaseManual(w);
+    }
+    sort(words.begin(), words.end());
+    if(words.empty()) { cout << "(no words)\n"; return; }
+    cout << "Sorted words:\n";
+    for(size_t i=0;i<words.size();++i){
+        cout << words[i] << (i+1==words.size()? '\n' : ' ');
+    }
+}
+
+void ec_findAllPositions(){
+    cout << "Enter text: ";
+    string text; getline(cin, text);
+    cout << "Word to find: ";
+    string w; getline(cin, w);
+    vector<size_t> pos;
+    size_t start = 0; 
+    while(true){
+        size_t p = text.find(w, start);
+        if(p==string::npos) break;
+        pos.push_back(p);
+        start = p + 1;
+    }
+    if(pos.empty()) cout << "(no matches)\n";
+    else{
+        cout << "Positions: ";
+        for(size_t i=0;i<pos.size();++i){
+            cout << pos[i] << (i+1==pos.size()? '\n' : ' ');
+        }
+    }
+}
+
+void printMenu(){
+    cout << "\n==== String Lab Menu ====\n";
+    cout << "1) Extract username/domain from email\n";
+    cout << "2) Replace all \"Miramar\" with \"San Diego Miramar College\"\n";
+    cout << "3) Palindrome checker (ignore spaces & case)\n";
+    cout << "4) Find the longest word\n";
+    cout << "5) Character histogram (letters only)\n";
+    cout << "6) Mask email username\n";
+    cout << "-- Extra Credit --\n";
+    cout << "7) Sort all words alphabetically\n";
+    cout << "8) Find all positions of a word\n";
+    cout << "0) Exit\n";
+    cout << "> ";
+}
+
+int main(){
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+    while(true){
+        printMenu();
+        string line; if(!getline(cin, line)) break;
+        line = trim(line);
+        if(line.empty()) continue;
+        int choice = -1;
+        try{ choice = stoi(line); } catch(...){ choice = -1; }
+        switch(choice){
+            case 1: task_extractEmail(); break;
+            case 2: task_replaceMiramar(); break;
+            case 3: task_palindrome(); break;
+            case 4: task_longestWord(); break;
+            case 5: task_histogram(); break;
+            case 6: task_maskEmail(); break;
+            case 7: ec_sortWords(); break;
+            case 8: ec_findAllPositions(); break;
+            case 0: cout << "Bye!\n"; return 0;
+            default: cout << "Invalid choice.\n"; break;
+        }
+    }
+    return 0;
+}
