@@ -1,0 +1,263 @@
+#include <iostream>
+#include <cstdlib>  // rand, srand
+#include <ctime>    // time
+using namespace std;
+
+// ANSI color codes for colored output (works in most terminals)
+const string RED   = "\033[31m";
+const string BLUE  = "\033[34m";
+const string RESET = "\033[0m";
+
+class TicTacToe {
+private:
+    // 3x3 board storing 'X', 'O', or ' ' (empty)
+    char board[3][3];
+
+    // Current player ('X' for Player 1, 'O' for Player 2 or computer)
+    char currentPlayer;
+
+    // Total number of moves placed on the board (0–9)
+    int moveCount;
+
+    // If true, Player 2 is a simple computer AI
+    bool vsComputer;
+
+public:
+    // Constructor: initialize an empty board and set first player to 'X'
+    TicTacToe(bool playAgainstComputer = false) {
+        resetBoard();
+        currentPlayer = 'X';
+        moveCount = 0;
+        vsComputer = playAgainstComputer;
+    }
+
+    // Reset the board to an empty state
+    void resetBoard() {
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                board[i][j] = ' ';
+            }
+        }
+    }
+
+    // Display the current state of the board (with colored X/O)
+    void displayBoard() const {
+        cout << "\n   1   2   3\n";
+        cout << "  -----------\n";
+        for (int i = 0; i < 3; i++) {
+            cout << i + 1 << " | ";
+            for (int j = 0; j < 3; j++) {
+                char cell = board[i][j];
+                // Color X and O differently
+                if (cell == 'X') {
+                    cout << RED << cell << RESET << " | ";
+                } else if (cell == 'O') {
+                    cout << BLUE << cell << RESET << " | ";
+                } else {
+                    cout << cell << " | ";
+                }
+            }
+            cout << "\n  -----------\n";
+        }
+        cout << endl;
+    }
+
+    // Check if the chosen move (row, col) is valid
+    // Valid if: 1) row/col in range 1–3, 2) board cell is empty
+    bool isValidMove(int row, int col) const {
+        if (row < 1 || row > 3 || col < 1 || col > 3) {
+            return false;
+        }
+        if (board[row - 1][col - 1] != ' ') {
+            return false;
+        }
+        return true;
+    }
+
+    // Place the current player's mark on the board
+    void makeMove(int row, int col) {
+        board[row - 1][col - 1] = currentPlayer;
+        moveCount++;
+    }
+
+    // Simple computer AI: choose a random valid move
+    void computerMove() {
+        cout << "Computer (" << currentPlayer << ") is making a move...\n";
+
+        // If the board is almost full, we still try random positions
+        int row, col;
+        while (true) {
+            row = rand() % 3 + 1; // 1–3
+            col = rand() % 3 + 1; // 1–3
+            if (isValidMove(row, col)) {
+                makeMove(row, col);
+                cout << "Computer chose row " << row << ", column " << col << ".\n";
+                break;
+            }
+        }
+    }
+
+    // Check if the current player has won the game
+    bool checkWinner() const {
+        char p = currentPlayer;
+
+        // Check rows
+        for (int i = 0; i < 3; i++) {
+            if (board[i][0] == p && board[i][1] == p && board[i][2] == p) {
+                return true;
+            }
+        }
+
+        // Check columns
+        for (int j = 0; j < 3; j++) {
+            if (board[0][j] == p && board[1][j] == p && board[2][j] == p) {
+                return true;
+            }
+        }
+
+        // Check main diagonal
+        if (board[0][0] == p && board[1][1] == p && board[2][2] == p) {
+            return true;
+        }
+
+        // Check anti-diagonal
+        if (board[0][2] == p && board[1][1] == p && board[2][0] == p) {
+            return true;
+        }
+
+        return false;
+    }
+
+    // Check if the game is a draw (all 9 moves used with no winner)
+    bool isDraw() const {
+        return (moveCount == 9);
+    }
+
+    // Switch to the other player
+    void switchPlayer() {
+        currentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
+    }
+
+    // Main game loop: handle input, update board, check status
+    void playGame() {
+        cout << "===== Tic-Tac-Toe Game =====\n";
+        cout << "Player 1: X\n";
+        if (vsComputer) {
+            cout << "Computer: O\n\n";
+        } else {
+            cout << "Player 2: O\n\n";
+        }
+
+        bool gameOver = false;
+
+        while (!gameOver) {
+            displayBoard();
+            cout << "Current Player: " << currentPlayer << endl;
+
+            int row, col;
+
+            // If it's computer's turn and vsComputer is true
+            if (vsComputer && currentPlayer == 'O') {
+                computerMove();
+            } else {
+                // Human player's turn (Player 1 or Player 2)
+                while (true) {
+                    cout << "Enter row (1-3): ";
+                    cin >> row;
+                    cout << "Enter column (1-3): ";
+                    cin >> col;
+
+                    // Handle non-numeric input
+                    if (cin.fail()) {
+                        cin.clear();
+                        cin.ignore(1000, '\n');
+                        cout << "Invalid input. Please enter numbers between 1 and 3.\n";
+                        continue;
+                    }
+
+                    if (!isValidMove(row, col)) {
+                        cout << "Invalid move. Try again.\n";
+                    } else {
+                        break;
+                    }
+                }
+                makeMove(row, col);
+            }
+
+            // Check for winner
+            if (checkWinner()) {
+                displayBoard();
+                if (vsComputer && currentPlayer == 'O') {
+                    cout << "Computer (" << currentPlayer << ") wins!\n";
+                } else {
+                    cout << "Player " << (currentPlayer == 'X' ? 1 : 2)
+                         << " (" << currentPlayer << ") wins!\n";
+                }
+                gameOver = true;
+            }
+            // Check for draw
+            else if (isDraw()) {
+                displayBoard();
+                cout << "It's a draw!\n";
+                gameOver = true;
+            }
+            // Continue the game
+            else {
+                switchPlayer();
+            }
+        }
+
+        cout << "Game over. Thanks for playing!\n";
+    }
+};
+
+int main() {
+    // Seed random number generator for the computer AI
+    srand(static_cast<unsigned int>(time(nullptr)));
+
+    char playAgain;
+
+    do {
+        cout << "==============================\n";
+        cout << "   Welcome to Tic-Tac-Toe\n";
+        cout << "==============================\n";
+        cout << "Select mode:\n";
+        cout << "1) Player vs Player\n";
+        cout << "2) Player vs Computer\n";
+        cout << "Enter choice (1 or 2): ";
+
+        int choice;
+        cin >> choice;
+
+        // Handle invalid input for mode choice
+        if (cin.fail()) {
+            cin.clear();
+            cin.ignore(1000, '\n');
+            choice = 1; // default to Player vs Player
+        }
+
+        bool vsComputer = false;
+        if (choice == 2) {
+            vsComputer = true;
+        }
+
+        // Create a game object with or without computer mode
+        TicTacToe game(vsComputer);
+        game.playGame();
+
+        cout << "\nDo you want to play again? (y/n): ";
+        cin >> playAgain;
+        cout << endl;
+
+        // Clear any leftover input
+        if (cin.fail()) {
+            cin.clear();
+            cin.ignore(1000, '\n');
+            playAgain = 'n';
+        }
+
+    } while (playAgain == 'y' || playAgain == 'Y');
+
+    cout << "Exiting program. Goodbye!\n";
+    return 0;
+}
